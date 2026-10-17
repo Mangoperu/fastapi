@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI , Response , status
 from fastapi.params import Body
 from pydantic import BaseModel
 from typing import Optional
@@ -17,7 +17,7 @@ class Post(BaseModel):
 async def root():
     return {"message": my_posts}
 
-@app.post("/createpost")
+@app.post("/createpost" , status_code=status.HTTP_201_CREATED)
 async def createpost(newpost : Post):
     post_dict = newpost.dict();
     post_dict['id'] = str(randrange(0 , 10000000))
@@ -29,7 +29,6 @@ def finding(id):
     for p in my_posts:
         if p["id"] == id:
             return p
-    return {"sorry": "post not available"}
 
 
 @app.get("/posts/latestpost")
@@ -39,9 +38,13 @@ def latest_post():
 
 
 @app.get("/posts/{id}")
-def get_post(id : int):
+def get_post(id, response : Response):
     print(id)
-    return {"post detail" : finding(id)}
+    post = finding(id)
+    if not post :
+        response.status_code = status.HTTP_404_NOT_FOUND
+        return {f"post with {id}" : "not found"}
+    return {"post detail" : post}
 
 
 
